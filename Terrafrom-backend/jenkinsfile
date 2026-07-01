@@ -1,0 +1,77 @@
+pipeline {
+    agent any
+
+    environment {
+        AWS_DEFAULT_REGION = "us-east-1"
+    }
+
+    stages {
+
+        stage('Checkout Code') {
+            steps {
+                echo 'Cloning GitHub Repository...'
+                git branch: 'main',
+                    url: 'https://github.com/syedarefa642/Terrafrom-CI-CD.git'
+            }
+        }
+
+        stage('Check Installed Tools') {
+            steps {
+                sh '''
+                echo "===== AWS CLI ====="
+                aws --version
+
+                echo "===== Terraform ====="
+                terraform version
+
+                echo "===== Git ====="
+                git --version
+                '''
+            }
+        }
+
+        stage('Verify AWS Credentials') {
+            steps {
+                sh 'aws sts get-caller-identity'
+            }
+        }
+
+        stage('Terraform Init') {
+            steps {
+                sh 'terraform init'
+            }
+        }
+
+        stage('Terraform Format') {
+            steps {
+                sh 'terraform fmt'
+            }
+        }
+
+        stage('Terraform Validate') {
+            steps {
+                sh 'terraform validate'
+            }
+        }
+
+        stage('Terraform Plan') {
+            steps {
+                sh 'terraform plan'
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Terraform CI Pipeline Completed Successfully!'
+        }
+
+        failure {
+            echo 'Pipeline Failed. Check the Console Output.'
+        }
+
+        always {
+            echo 'Pipeline Execution Finished.'
+        }
+    }
+}
